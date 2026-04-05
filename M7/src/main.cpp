@@ -2,20 +2,20 @@
 #include <lvgl.h>
 #include <Arduino_H7_Video.h>
 #include "Arduino_GigaDisplayTouch.h"
-
-Arduino_H7_Video Display(800,480,GigaDisplayShield);
+#include "config.h"
+#include "ui_mod.h"
+Arduino_H7_Video Display(DISPLAY_WIDTH,DISPLAY_HEIGHT,GigaDisplayShield);
 Arduino_GigaDisplayTouch TouchDetector;
 
 
 void setup() {
   // put your setup code here, to run once:
-  Display.begin();
-  TouchDetector.begin();
+  if(Display.begin() != 0) return;
+  if(TouchDetector.begin() == false) return;
   
 
   //Creation of lvgl graphics
-  lv_obj_t * screen = lv_obj_create(lv_scr_act());
-  lv_obj_set_size(screen, Display.width(), Display.height());
+  initUI();
 
 }
 
