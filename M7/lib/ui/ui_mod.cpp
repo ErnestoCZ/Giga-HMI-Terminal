@@ -4,17 +4,38 @@
 
 extern Arduino_H7_Video Display;
 
+#define DEVICE_NAME_BUFFER_LEN 32
 static lv_subject_t s_temp;
 static lv_subject_t s_hum;
 static lv_subject_t s_press;
 static lv_subject_t s_dev_name;
-static char device_name_buffer[32] = "--";
+static char device_name_buffer[DEVICE_NAME_BUFFER_LEN] = "--";
 
 void init_data_subjects(){
-    lv_subject_init_int(&s_temp, INT32_MIN);
-    lv_subject_init_int(&s_hum, INT32_MIN);
-    lv_subject_init_int(&s_press, INT32_MIN);
+    lv_subject_init_int(&s_temp, 0);
+    lv_subject_init_int(&s_hum, 0);
+    lv_subject_init_int(&s_press, 0);
     lv_subject_init_pointer(&s_dev_name, device_name_buffer);
+};
+
+int ui_set_device_name(const char * dev_name, const unsigned int len){
+    if(len > DEVICE_NAME_BUFFER_LEN) return 1;
+
+    strcpy(device_name_buffer,dev_name);
+    lv_subject_set_pointer(&s_dev_name,device_name_buffer);
+    return 0;
+};
+int ui_set_temperature_value(const int32_t val){
+    lv_subject_set_int(&s_temp, val);
+    return 0;
+};
+int ui_set_humidity_value(const int32_t val){
+    lv_subject_set_int(&s_hum,val);
+    return 0;
+};
+int ui_set_pressure_value(const int32_t val){
+    lv_subject_set_int(&s_press, val);
+    return 0;
 };
 
 void initUI(){
@@ -52,5 +73,4 @@ void initUI(){
     lv_obj_set_width(label_pressure, lv_pct(100));
     lv_obj_set_style_text_font(label_pressure, &lv_font_montserrat_30, 0);
     lv_label_bind_text(label_pressure,&s_press,"Pressure : %d hPa");
-
 };
