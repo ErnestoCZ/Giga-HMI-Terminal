@@ -1,23 +1,23 @@
 #include <Arduino.h>
 #include <lvgl.h>
 #include <Arduino_H7_Video.h>
+#include <ArduinoBLE.h>
 #include "Arduino_GigaDisplayTouch.h"
 #include "config.h"
 #include "ui_mod.h"
+#include "components/tw_tab_ess.h"
+
 Arduino_H7_Video Display(DISPLAY_WIDTH,DISPLAY_HEIGHT,GigaDisplayShield);
 Arduino_GigaDisplayTouch TouchDetector;
-#include <ArduinoBLE.h>
 BLEDevice peripheral;
 void setup() {
   // put your setup code here, to run once:
   if(Display.begin() != 0) return;
   if(TouchDetector.begin() == false) return;
-
   BLE.begin();
 
   Serial.println("Init completed");
   BLE.scanForName("NRF5340Dev");
-
 
   //Creation of lvgl graphics
   initUI();
@@ -33,7 +33,7 @@ void loop() {
     Serial.print(peripheral.address());
     Serial.print(" '");
     Serial.print(peripheral.localName());
-    ui_set_device_name(peripheral.localName().c_str(), (size_t)peripheral.localName().length());
+    tw_ess_set_device_name(peripheral.localName().c_str(), (size_t)peripheral.localName().length());
     Serial.print("' ");
     Serial.print(peripheral.advertisedServiceUuid());
     Serial.println();
@@ -51,13 +51,13 @@ void loop() {
           if(characteristic.read()){
             characteristic.readValue(charValue);
             if(strcmp(characteristic.uuid(), "2a6e") == 0){
-              ui_set_temperature_value(charValue);
+              tw_ess_set_temperature_value(charValue);
             }
             if(strcmp(characteristic.uuid(), "2a6f") == 0){
-              ui_set_humidity_value(charValue);
+              tw_ess_set_humidity_value(charValue);
             }
             if(strcmp(characteristic.uuid(), "2a6d") == 0){
-              ui_set_pressure_value(charValue);
+              tw_ess_set_pressure_value(charValue);
             }
           }
         }
