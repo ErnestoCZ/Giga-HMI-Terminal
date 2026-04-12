@@ -2,6 +2,7 @@
 #include <lvgl.h>
 #include <Arduino_H7_Video.h>
 #include "components/tw_tab_ess.h"
+#include "components/tw_tab_settings.h"
 
 extern Arduino_H7_Video Display;
 
@@ -12,5 +13,6 @@ void initUI(){
 
     auto tabWidget = lv_tabview_create(screen);
     create_tw_tab_ess(tabWidget);
+    create_tw_tab_settings(tabWidget);
 
 };
