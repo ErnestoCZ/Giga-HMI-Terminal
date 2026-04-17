@@ -23,7 +23,11 @@ void humidityFormatter(lv_observer_t* observer, lv_subject_t* subject){
     int32_t value = lv_subject_get_int(subject);
     lv_label_set_text_fmt(label,"Humidity : %d.%d %%",(value/100),(int32_t)(value%100));
 }
-//TODO PressureFormatter
+void pressureFormatter(lv_observer_t* observer, lv_subject_t* subject){
+    lv_obj_t* label = lv_observer_get_target_obj(observer);
+    int32_t value = lv_subject_get_int(subject);
+    lv_label_set_text_fmt(label,"Pressure : %d.%d hPa",(value/100),(int32_t)(value%100));
+}
 
 int tw_ess_set_device_name(const char * dev_name, const unsigned int len){
     if(len > DEVICE_NAME_BUFFER_LEN) return 1;
@@ -78,7 +82,7 @@ void create_tw_tab_ess(lv_obj_t* parent){
     auto label_pressure = lv_label_create(tab);
     lv_obj_set_width(label_pressure, lv_pct(100));
     lv_obj_set_style_text_font(label_pressure, &lv_font_montserrat_30, 0);
-    lv_label_bind_text(label_pressure,&s_press,"Pressure : %d hPa");
+    lv_subject_add_observer_obj(&s_press,pressureFormatter,label_pressure,NULL);
 
     // auto chart = lv_chart_create(tab);
     // lv_chart_set_axis_range(chart,LV_CHART_AXIS_PRIMARY_Y,-10,100);
