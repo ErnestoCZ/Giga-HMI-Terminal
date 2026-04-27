@@ -3,7 +3,7 @@
 #include <Arduino_H7_Video.h>
 #include "components/tw_tab_ess.h"
 #include "components/tw_tab_settings.h"
-
+#include "components/statusbar.h"
 extern Arduino_H7_Video Display;
 
 void initUI(){
@@ -14,5 +14,7 @@ void initUI(){
     auto tabWidget = lv_tabview_create(screen);
     create_tw_tab_ess(tabWidget);
     create_tw_tab_settings(tabWidget);
+
+    create_statusBar(screen);
 
 };
