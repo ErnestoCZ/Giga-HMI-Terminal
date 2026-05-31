@@ -26,9 +26,26 @@ mbed::LittleFileSystem fs("fs");
 
 
 #define BLE_ESS_UUID 181a
-#define BLE_TEMPERATURE_CHAR 2a6e
-#define BLE_HUMIDITY_CHAR 2a6f
-#define BLE_PRESSURE_CHAR 2a6d
+#define BLE_TEMPERATURE_CHAR "2a6e"
+#define BLE_HUMIDITY_CHAR "2a6f"
+#define BLE_PRESSURE_CHAR "2a6d"
+void BLE_TemperatureUpdateHandler(BLEDevice device, BLECharacteristic characteristic){
+  int32_t value = 0;
+  characteristic.readValue(value);
+  tw_ess_set_temperature_value(value);
+};
+void BLE_HumidityUpdateHandler(BLEDevice device, BLECharacteristic characteristic){
+  int32_t value = 0;
+  characteristic.readValue(value);
+  tw_ess_set_humidity_value(value);
+
+};
+void BLE_AirPressureUpdateHandler(BLEDevice device, BLECharacteristic characteristic){
+  int32_t value = 0;
+  characteristic.readValue(value);
+  tw_ess_set_pressure_value(value);
+
+};
 
 Arduino_H7_Video Display(DISPLAY_WIDTH,DISPLAY_HEIGHT,GigaDisplayShield);
 Arduino_GigaDisplayTouch TouchDetector;
@@ -40,65 +57,62 @@ void setup() {
   ui_thread.start(ui_thread_handler);
   BLE.begin();
 
-  Serial.println("Init completed");
-  BLE.scanForName("NRF5340Dev");
-
-  //Creation of lvgl graphics
-  initUI();
-
+  int err = fs.mount(&bd);
+  if(err){
+    Serial.println("Mount failed. Formatting...");
+    err = fs.reformat(&bd);
+    if(err){
+      Serial.println("Error formatting QSPI Flash!");
+      return;
+    }
+  }
+  FILE *f =fopen("/fs/test.txt","r");
+  if(f == NULL){
+    Serial.println("Requested File does not exists");
+  }else{
+    char buffer[256];
+    while(fgets(buffer,sizeof(buffer),f)){
+      Serial.println(buffer);
+    }
+  }
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  lv_timer_handler();
+  BLE.scanForUuid("181a");
+
   peripheral = BLE.available();
-  if(peripheral){
-    Serial.print("Found ");
-    Serial.print(peripheral.address());
-    Serial.print(" '");
-    Serial.print(peripheral.localName());
-    tw_ess_set_device_name(peripheral.localName().c_str(), (size_t)peripheral.localName().length());
-    Serial.print("' ");
-    Serial.print(peripheral.advertisedServiceUuid());
-    Serial.println();
-    peripheral.connect();
-    if(peripheral.connected()){
-      peripheral.discoverService(peripheral.advertisedServiceUuid().c_str());
-      if(peripheral.characteristicCount() > 0){
-        BLEService service = peripheral.service(peripheral.advertisedServiceUuid().c_str());
-        Serial.println("Found the following characteristics in ESS:");
-        for (int i = 0; i < service.characteristicCount(); i++)
-        {
-          int32_t charValue = 0;
-          BLECharacteristic characteristic = peripheral.characteristic(i);
-          Serial.println(characteristic.uuid());
-          if(characteristic.canSubscribe()){
-          }
-          if(characteristic.read()){
-            characteristic.readValue(charValue);
-            if(strcmp(characteristic.uuid(), "2a6e") == 0){
-              lvgl_mutex.lock();
-              tw_ess_set_temperature_value(charValue);
-              lvgl_mutex.unlock();
-            }
-            if(strcmp(characteristic.uuid(), "2a6f") == 0){
-              lvgl_mutex.lock();
-              tw_ess_set_humidity_value(charValue);
-              lvgl_mutex.unlock();
-            }
-            if(strcmp(characteristic.uuid(), "2a6d") == 0){
-              lvgl_mutex.lock();
-              tw_ess_set_pressure_value(charValue);
-              lvgl_mutex.unlock();
-            }
-          }
+  if(peripheral && !peripheral.connected()){
+    BLE.stopScan();
+    Serial.println(peripheral.localName());
+    tw_ess_set_device_name(peripheral.localName().c_str(), peripheral.localName().length());
+    for (int i = 0; i < peripheral.advertisedServiceUuidCount(); i++)
+    {
+      Serial.println(peripheral.advertisedServiceUuid(i));
+      if(peripheral.advertisedServiceUuid(i) == "181a"){
+
+        if(!peripheral.connected()){
+          peripheral.connect();
+          Serial.println("Connection established to peripheral");
+
+        }else{
+          Serial.println("Peripheral already connected");
         }
-        
+        peripheral.discoverService("181a");
+        if(peripheral.hasCharacteristic(BLE_TEMPERATURE_CHAR) && peripheral.characteristic(BLE_TEMPERATURE_CHAR).canSubscribe()){
+          peripheral.characteristic(BLE_TEMPERATURE_CHAR).setEventHandler(BLEWritten, BLE_TemperatureUpdateHandler);
+          peripheral.characteristic(BLE_TEMPERATURE_CHAR).subscribe();
+        }
+        if(peripheral.hasCharacteristic(BLE_HUMIDITY_CHAR) && peripheral.characteristic(BLE_HUMIDITY_CHAR).canSubscribe()){
+          peripheral.characteristic(BLE_HUMIDITY_CHAR).setEventHandler(BLEWritten, BLE_HumidityUpdateHandler);
+          peripheral.characteristic(BLE_HUMIDITY_CHAR).subscribe();
+        }
+        if(peripheral.hasCharacteristic(BLE_PRESSURE_CHAR) && peripheral.characteristic(BLE_PRESSURE_CHAR).canSubscribe()){
+          peripheral.characteristic(BLE_PRESSURE_CHAR).setEventHandler(BLEWritten, BLE_AirPressureUpdateHandler);
+          peripheral.characteristic(BLE_PRESSURE_CHAR).subscribe();
+        }
       }
-      
-        
-      peripheral.disconnect();
-      BLE.scanForName("NRF5340Dev");
     }
   }
+
 }
