@@ -16,17 +16,17 @@ static void init_data_subjects(){
 void temperatureFormatter(lv_observer_t* observer, lv_subject_t* subject){
     lv_obj_t* label = lv_observer_get_target_obj(observer);
     int32_t value = lv_subject_get_int(subject);
-    lv_label_set_text_fmt(label,"Temperature : %d.%d °C",(value/100),(int32_t)(value%100));
+    lv_label_set_text_fmt(label,"Temperature : %d.%.2d °C",(value/100),(int32_t)(value%100));
 }
 void humidityFormatter(lv_observer_t* observer, lv_subject_t* subject){
     lv_obj_t* label = lv_observer_get_target_obj(observer);
     int32_t value = lv_subject_get_int(subject);
-    lv_label_set_text_fmt(label,"Humidity : %d.%d %%",(value/100),(int32_t)(value%100));
+    lv_label_set_text_fmt(label,"Humidity : %d.%.2d %%",(value/100),(int32_t)(value%100));
 }
 void pressureFormatter(lv_observer_t* observer, lv_subject_t* subject){
     lv_obj_t* label = lv_observer_get_target_obj(observer);
     int32_t value = lv_subject_get_int(subject);
-    lv_label_set_text_fmt(label,"Pressure : %d.%d hPa",(value/100),(int32_t)(value%100));
+    lv_label_set_text_fmt(label,"Pressure : %d.%.2d hPa",(value/100),(int32_t)(value%100));
 }
 
 int tw_ess_set_device_name(const char * dev_name, const unsigned int len){
